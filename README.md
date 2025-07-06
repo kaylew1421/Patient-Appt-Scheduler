@@ -1,7 +1,6 @@
 # Appointment Scheduler & Calendar Application
 
-![App Demo](https://user-images.githubusercontent.com/yourusername/demo-image.png)  
-*(Replace above with your project screenshot or GIF)*
+![App Demo] (https://kaylew1421.github.io/Patient-Appt-Scheduler/)
 
 ---
 
