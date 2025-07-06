@@ -1,6 +1,6 @@
 # Appointment Scheduler & Calendar Application
 
-![App Demo] (https://kaylew1421.github.io/Patient-Appt-Scheduler/)
+![App Demo] (https://patient-appt-scheduler.onrender.com)
 
 ---
 
