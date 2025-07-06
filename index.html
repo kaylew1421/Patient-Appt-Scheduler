@@ -79,6 +79,19 @@
       margin: auto;
     }
 
+    /* Calendar Link */
+    #calendarLink {
+      display: inline-block;
+      margin-bottom: 20px;
+      font-weight: 700;
+      color: #2980b9;
+      text-decoration: none;
+      font-size: 1.2rem;
+    }
+    #calendarLink:hover {
+      text-decoration: underline;
+    }
+
     h1 {
       color: #2980b9;
       font-weight: 700;
@@ -289,6 +302,9 @@
   </div>
 
   <main id="mainContent">
+    <!-- Calendar Link Added Here -->
+    <a id="calendarLink" href="calendar.html" aria-label="Go to calendar page">📅 Calendar</a>
+
     <h1>📋 Appointments</h1>
 
     <form id="appointmentForm" aria-label="Add or edit appointment form">
@@ -483,31 +499,21 @@
           form.providerPhone.value = appt.providerPhone || '';
           form.icdCodes.value = appt.icdCodes || '';
           form.cptCodes.value = appt.cptCodes || '';
-          form.reason.value = appt.reason || '';
           form.insuranceType.value = appt.insuranceType || '';
+          form.reason.value = appt.reason || '';
           form.notes.value = appt.notes || '';
-
           editingId = id;
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        if (e.target.closest('.btn-delete')) {
+          form.scrollIntoView({behavior: 'smooth'});
+        } else if (e.target.closest('.btn-delete')) {
           const id = e.target.closest('.btn-delete').dataset.id;
-          const appt = allAppointments.find(a => a.id === id);
-          if (!appt) return;
-          if (confirm(`Are you sure you want to delete the appointment for ${appt.patientName}?`)) {
+          if (confirm('Are you sure you want to delete this appointment?')) {
             try {
               const res = await fetch(`/appointments/${id}`, { method: 'DELETE' });
-              const json = await res.json();
-              if (json.success) {
-                alert('🗑️ Appointment deleted.');
-                editingId = null;
-                await loadAppointments();
-              } else {
-                alert('Failed to delete appointment.');
-              }
+              if (!res.ok) throw new Error('Delete failed');
+              allAppointments = allAppointments.filter(a => a.id !== id);
+              displayAppointments(allAppointments);
             } catch (err) {
-              alert('Error deleting appointment: ' + err.message);
+              alert('Error deleting appointment');
               console.error(err);
             }
           }
@@ -516,52 +522,47 @@
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const newAppt = {
-          patientName: form.patientName.value.trim(),
-          patientId: form.patientId.value.trim(),
-          dob: form.dob.value,
-          homeAddress: form.homeAddress.value.trim(),
-          phone: form.phone.value.trim(),
-          dos: form.dos.value,
-          dosTime: form.dosTime.value,
-          providerName: form.providerName.value.trim(),
-          providerAddress: form.providerAddress.value.trim(),
-          providerPhone: form.providerPhone.value.trim(),
-          icdCodes: form.icdCodes.value.trim(),
-          cptCodes: form.cptCodes.value.trim(),
-          reason: form.reason.value.trim(),
-          insuranceType: form.insuranceType.value,
-          notes: form.notes.value.trim(),
-        };
-
-        try {
-          let url = '/appointments';
-          let method = 'POST';
-          if (editingId) {
-            url = `/appointments/${editingId}`;
-            method = 'PUT';
-          }
-          const res = await fetch(url, {
-            method,
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(newAppt),
-          });
-          const json = await res.json();
-          if (json.success) {
-            alert(editingId ? '✅ Appointment updated!' : '✅ Appointment added!');
-            form.reset();
+        const formData = new FormData(form);
+        const apptData = Object.fromEntries(formData.entries());
+        if (editingId) {
+          // Update
+          try {
+            const res = await fetch(`/appointments/${editingId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(apptData)
+            });
+            if (!res.ok) throw new Error('Update failed');
+            const updated = await res.json();
+            const idx = allAppointments.findIndex(a => a.id === editingId);
+            if (idx > -1) allAppointments[idx] = updated;
+            displayAppointments(allAppointments);
             editingId = null;
-            await loadAppointments();
-          } else {
-            alert('Failed to save appointment.');
+            form.reset();
+          } catch (err) {
+            alert('Error updating appointment');
+            console.error(err);
           }
-        } catch (err) {
-          alert('Error saving appointment: ' + err.message);
-          console.error(err);
+        } else {
+          // Create
+          try {
+            const res = await fetch('/appointments', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(apptData)
+            });
+            if (!res.ok) throw new Error('Create failed');
+            const created = await res.json();
+            allAppointments.push(created);
+            displayAppointments(allAppointments);
+            form.reset();
+          } catch (err) {
+            alert('Error adding appointment');
+            console.error(err);
+          }
         }
       });
 
-      // Initial load
       loadAppointments();
     });
   </script>
