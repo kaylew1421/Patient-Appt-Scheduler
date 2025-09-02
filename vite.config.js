@@ -7,7 +7,7 @@ plugins: [react()],
 server: {
 port: 5173,
 host: true,
-// Proxy API calls to your Express backend during dev (optional)
+
 proxy: {
 '/api': 'http://localhost:3000'
 }

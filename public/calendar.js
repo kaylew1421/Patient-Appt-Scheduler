@@ -1,7 +1,7 @@
 // Calendar <-> localStorage bridge
 const LS_KEY = 'pas:rows:v1';
 
-// event colors (match badges from the app)
+// event colors 
 const colorMap = {
   Private:  '#2e7d32',  // success-700
   Medicare: '#4338ca',  // indigo-700

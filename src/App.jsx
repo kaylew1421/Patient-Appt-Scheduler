@@ -169,7 +169,7 @@ function InsuranceBadge({ value }) {
   );
 }
 
-/** ---------- Demo dataset (now uses random staff) ---------- */
+/** ---------- Demo dataset ---------- */
 function rand(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
