@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Appointment Management — Calendar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- FullCalendar (global bundle includes its own CSS) -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js"></script>
+
+    <style>
+      :root{
+        /* Base (match app) */
+        --bg:#fff; --text:#213547; --muted:#444;
+        --link:#646cff; --link-hover:#747bff;
+        --border:rgba(0,0,0,.12); --row:rgba(0,0,0,.03);
+
+        /* Tinted left column */
+        --sidebar-bg:#eef2ff;       /* indigo-50 */
+        --sidebar-border:#a5b4fc;   /* indigo-300 */
+        --sidebar-heading:#1f2a44;
+        --sidebar-text:#364152;
+
+        /* Buttons */
+        --btn-bg:#f9f9f9; --btn-text:#111; --btn-border:#dcdcdc;
+
+        /* FullCalendar theme vars */
+        --fc-border-color:var(--border);
+        --fc-page-bg-color:#fff;
+        --fc-neutral-bg-color:var(--row);
+        --fc-text-color:#213547;
+        --fc-now-indicator-color:#e53935;
+
+        /* ==== Same unified type scale as main page ==== */
+        --fs-base: 15px;
+        --fs-h1: 22px;
+        --fs-h2: 17px;
+        --fs-h3: 14px;
+        --fs-label: 13px;
+        --fs-input: 14px;
+        --fs-button: 13.5px;
+        --fs-th: 13px;
+        --fs-td: 14px;
+      }
+
+      * { box-sizing: border-box; }
+      html,body{
+        margin:0;background:var(--bg);color:var(--text);
+        -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+        font-family:system-ui,Inter,Avenir,Helvetica,Arial,sans-serif;
+        font-size:var(--fs-base);
+        overflow-x:hidden;
+      }
+
+      a{color:var(--link);text-decoration:none;font-weight:600}
+      a:hover{color:var(--link-hover)}
+
+      /* ====== FULL-WIDTH WITH SMALL GUTTERS (so nothing is cut off) ====== */
+      .container{
+        width:100%; max-width:none;
+        margin:0;
+        padding:12px 14px;
+        position:relative;
+      }
+
+      /* Header bar to match main page */
+      .topbar{
+        display:flex;align-items:center;justify-content:space-between;gap:12px;
+        background:#f8fafc;border:1px solid var(--border);border-radius:10px;
+        padding:10px 12px;margin-bottom:12px;
+      }
+      .topbar h1{ margin:0; font-size: var(--fs-h1); font-weight:700 }
+
+      /* Two columns: sidebar + main calendar */
+      .grid{
+        display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:stretch;
+      }
+      @media (max-width:900px){ .grid{grid-template-columns:1fr} }
+
+      /* Sidebar */
+      .left-col{
+        background:var(--sidebar-bg);
+        border:1px solid var(--sidebar-border);
+        border-radius:10px;
+        padding:16px;
+      }
+      .left-inner h2,.left-inner h3{color:var(--sidebar-heading);margin:0 0 .5rem}
+      .left-inner blockquote{
+        margin:0 0 .75rem;padding-left:12px;
+        border-left:3px solid rgba(31,42,68,.25);color:var(--sidebar-text);font-style:italic
+      }
+
+      /* Main area */
+      main{ padding: 0; }
+
+      /* Fit calendar without page scrolling */
+      #calendar{
+        background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px;
+        height: calc(100vh - 150px);  /* adjust to 160/170 if you still see a scrollbar */
+        overflow: hidden;
+      }
+      @media (max-width:900px){
+        #calendar{ height: auto; }
+      }
+
+      /* Buttons */
+      .btn{border-radius:10px;padding:.5em 1em;font-weight:700;cursor:pointer;font-size:var(--fs-button)}
+      .btn-ghost{background:var(--btn-bg);color:var(--btn-text);border:1px solid var(--btn-border)}
+      .btn-ghost:hover{border-color:var(--link)}
+
+      /* Modal */
+      .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;
+        align-items:center;justify-content:center;z-index:50}
+      .modal{
+        width:min(720px,95vw);max-height:85vh;overflow:auto;background:#fff;
+        border:1px solid var(--border);border-radius:12px;padding:16px
+      }
+      .modal h2{margin:0 0 8px}
+      .row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+      label{display:block;margin-bottom:4px;font-size:var(--fs-label);color:#333}
+      input,select,textarea{
+        width:100%;padding:8px 10px;border-radius:8px;border:1px solid #cfcfcf;
+        background:#fff;color:#111;box-sizing:border-box;font:inherit;font-size:var(--fs-input)
+      }
+      textarea{resize:vertical}
+      .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+      button{background:var(--btn-bg);color:var(--btn-text);border:1px solid var(--btn-border);
+        border-radius:8px;padding:.5em 1em;font-weight:600;cursor:pointer;font-size:var(--fs-button)}
+      button:hover{border-color:var(--link)}
+      .danger{border-color:#e57373}.danger:hover{border-color:#d32f2f}
+
+      /* ===== Optional: FullCalendar typography to match scale ===== */
+      .fc .fc-toolbar-title { font-size: var(--fs-h2); }
+      .fc .fc-button { font-size: var(--fs-button); padding: 0.35em 0.6em; }
+      .fc .fc-col-header-cell-cushion { padding: 6px 4px; font-size: var(--fs-th); }
+      .fc .fc-daygrid-day-number { font-size: var(--fs-th); padding: 4px; }
+      .fc .fc-event-title { font-size: var(--fs-td); }
+      .fc .fc-daygrid-event { padding: 1px 3px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="topbar">
+        <!-- Match main page heading -->
+        <h1>Appointment Management</h1>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a class="btn btn-ghost" href="/">← Back to Scheduler</a>
+        </div>
+      </div>
+
+      <div class="grid">
+        <!-- Sidebar -->
+        <div class="left-col">
+          <div class="left-inner">
+            <h2>Healthcare Resources</h2>
+            <blockquote>
+              “The good physician treats the disease; the great physician treats
+              the patient who has the disease.” — William Osler
+            </blockquote>
+
+            <h3>Emergency Numbers</h3>
+            <ul>
+              <li>Fire: 911</li>
+              <li>Poison Control: 1-800-222-1222</li>
+              <li>Emergency Medical Services: 911</li>
+              <li>National Suicide Prevention: 988</li>
+            </ul>
+
+            <h3>Helpful Websites</h3>
+            <ul>
+              <li><a href="https://www.cdc.gov" target="_blank" rel="noreferrer">CDC</a></li>
+              <li><a href="https://www.nih.gov" target="_blank" rel="noreferrer">NIH</a></li>
+              <li><a href="https://www.who.int" target="_blank" rel="noreferrer">WHO</a></li>
+              <li><a href="https://medlineplus.gov" target="_blank" rel="noreferrer">MedlinePlus</a></li>
+              <li><a href="https://www.healthcare.gov" target="_blank" rel="noreferrer">Healthcare.gov</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Calendar -->
+        <main>
+          <div id="calendar"></div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal-backdrop" id="backdrop">
+      <div class="modal">
+        <h2 id="m-title">Appointment Details</h2>
+        <div class="row">
+          <div><label>Patient Name<input id="m-patientName"></label></div>
+          <div><label>Patient ID<input id="m-patientId"></label></div>
+          <div><label>DOB<input id="m-dob" type="date"></label></div>
+          <div><label>Phone<input id="m-phone"></label></div>
+          <div><label>Date of Service<input id="m-dos" type="date"></label></div>
+          <div><label>Time of Service<input id="m-tos" type="time"></label></div>
+          <div><label>Provider Name<input id="m-providerName"></label></div>
+          <div><label>Insurance<select id="m-insurance">
+            <option>Private</option><option>Medicare</option><option>Medicaid</option><option>Self-pay</option>
+          </select></label></div>
+          <div><label>ICD-10 (comma-sep)<input id="m-icd10"></label></div>
+          <div><label>CPT (comma-sep)<input id="m-cpt"></label></div>
+          <div style="grid-column:1/-1"><label>Reason<input id="m-reason"></label></div>
+          <div style="grid-column:1/-1"><label>Notes<textarea id="m-notes" rows="3"></textarea></label></div>
+        </div>
+        <div class="btns">
+          <button id="m-edit">✏️ Edit</button>
+          <button id="m-save" style="display:none">💾 Save</button>
+          <button id="m-cancel" style="display:none">↩ Cancel</button>
+          <button id="m-delete" class="danger">🗑️ Delete</button>
+          <button id="m-close">❌ Close</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/calendar.js"></script>
+    <script>
+      // Start at top when navigating here
+      window.history.scrollRestoration = 'manual';
+      window.scrollTo(0,0);
+    </script>
+  </body>
+</html>

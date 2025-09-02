@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Appointment Calendar 🌟</title>
+
+  <!-- FullCalendar CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.7/index.global.min.css" rel="stylesheet" />
+
+  <style>
+    /* Reset & base */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: #f4f9ff;
+      color: #333;
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Sidebar styles */
+    #sidebar {
+      width: 280px;
+      background: #2c3e50;
+      color: #ecf0f1;
+      padding: 20px;
+      box-sizing: border-box;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+    #sidebar h2 {
+      margin-top: 0;
+      font-weight: 700;
+      border-bottom: 2px solid #2980b9;
+      padding-bottom: 10px;
+    }
+    #sidebar blockquote {
+      font-style: italic;
+      border-left: 4px solid #2980b9;
+      margin: 15px 0;
+      padding-left: 15px;
+      color: #aad4f5;
+    }
+    #sidebar ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    #sidebar ul li {
+      margin: 10px 0;
+      line-height: 1.4;
+    }
+    #sidebar ul li a {
+      color: #ecf0f1;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.3s ease;
+    }
+    #sidebar ul li a:hover {
+      color: #3498db;
+      text-decoration: underline;
+    }
+    #sidebar .emergency {
+      background: #c0392b;
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      margin-top: 20px;
+      box-shadow: 0 0 10px rgba(192, 57, 43, 0.5);
+    }
+
+    /* Main content area */
+    #mainContent {
+      flex-grow: 1;
+      padding: 30px 40px;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    h1 {
+      color: #2980b9;
+      font-weight: 700;
+      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 2.2rem;
+    }
+
+    /* Calendar container */
+    #calendar {
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(41, 128, 185, 0.3);
+    }
+
+    /* Popup styles */
+    #eventDetails {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 400px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 20px;
+      background: white;
+      border: 3px solid #2980b9;
+      border-radius: 12px;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 6px 20px rgba(41, 128, 185, 0.6);
+      z-index: 1000;
+      font-size: 0.9rem;
+    }
+    #overlay {
+      display: none;
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+    }
+    #eventDetails h3 {
+      margin-top: 0;
+      color: #2980b9;
+      font-weight: 700;
+      font-size: 1.3rem;
+      margin-bottom: 15px;
+    }
+    #eventDetails label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 600;
+      color: #34495e;
+    }
+    #eventDetails input[type="text"],
+    #eventDetails input[type="date"],
+    #eventDetails input[type="time"],
+    #eventDetails textarea,
+    #eventDetails select {
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 5px;
+      padding: 8px;
+      font-size: 14px;
+      border: 1.5px solid #2980b9;
+      border-radius: 6px;
+      transition: border-color 0.3s ease;
+    }
+    #eventDetails input[type="text"]:focus,
+    #eventDetails input[type="date"]:focus,
+    #eventDetails input[type="time"]:focus,
+    #eventDetails textarea:focus,
+    #eventDetails select:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 8px rgba(52, 152, 219, 0.4);
+    }
+    #eventDetails textarea {
+      resize: vertical;
+    }
+    #eventDetails .buttons {
+      margin-top: 20px;
+      text-align: right;
+    }
+    #eventDetails button {
+      margin-left: 8px;
+      padding: 8px 14px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      transition: background-color 0.3s ease;
+      font-weight: 600;
+    }
+    #editBtn {
+      background-color: #2980b9;
+      color: white;
+    }
+    #editBtn:hover {
+      background-color: #1f6391;
+    }
+    #deleteBtn {
+      background-color: #e74c3c;
+      color: white;
+    }
+    #deleteBtn:hover {
+      background-color: #c0392b;
+    }
+    #closeDetailsBtn, #cancelEditBtn {
+      background-color: #bdc3c7;
+      color: #2c3e50;
+    }
+    #closeDetailsBtn:hover, #cancelEditBtn:hover {
+      background-color: #95a5a6;
+    }
+    #editForm button[type="submit"] {
+      background-color: #27ae60;
+      color: white;
+    }
+    #editForm button[type="submit"]:hover {
+      background-color: #1f8f4a;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div id="sidebar" role="complementary" aria-label="Resources and Emergency Contacts">
+    <h2>🌡️ Healthcare Resources</h2>
+    <blockquote>
+      "The good physician treats the disease; the great physician treats the patient who has the disease." — William Osler
+    </blockquote>
+
+    <div class="emergency">
+      🚨 <strong>Emergency Numbers</strong> 🚨
+      <ul>
+        <li>Fire: <a href="tel:911">911</a></li>
+        <li>Poison Control: <a href="tel:18002221222">1-800-222-1222</a></li>
+        <li>Emergency Medical Services: <a href="tel:911">911</a></li>
+        <li>National Suicide Prevention: <a href="tel:988">988</a></li>
+      </ul>
+    </div>
+
+    <h3>Helpful Websites</h3>
+    <ul>
+      <li><a href="https://www.cdc.gov" target="_blank" rel="noopener">CDC</a></li>
+      <li><a href="https://www.nih.gov" target="_blank" rel="noopener">NIH</a></li>
+      <li><a href="https://www.who.int" target="_blank" rel="noopener">WHO</a></li>
+      <li><a href="https://medlineplus.gov" target="_blank" rel="noopener">MedlinePlus</a></li>
+      <li><a href="https://www.healthcare.gov" target="_blank" rel="noopener">Healthcare.gov</a></li>
+    </ul>
+  </div>
+
+  <main id="mainContent">
+    <h1>📅 Appointment Calendar</h1>
+    <div id="calendar"></div>
+
+    <!-- Popup for appointment details & editing -->
+    <div id="overlay"></div>
+    <div id="eventDetails" role="dialog" aria-modal="true" aria-labelledby="eventDetailsTitle">
+      <h3 id="eventDetailsTitle">Appointment Details</h3>
+
+      <div id="viewMode">
+        <div id="detailsContent"></div>
+        <div class="buttons">
+          <button id="editBtn" aria-label="Edit appointment">✏️ Edit</button>
+          <button id="deleteBtn" aria-label="Delete appointment">🗑️ Delete</button>
+          <button id="closeDetailsBtn" aria-label="Close details popup">❌ Close</button>
+        </div>
+      </div>
+
+      <form id="editForm" style="display:none;">
+        <label for="patientName">Patient Name*</label>
+        <input type="text" id="patientName" name="patientName" required />
+
+        <label for="patientId">Patient ID*</label>
+        <input type="text" id="patientId" name="patientId" required />
+
+        <label for="dob">Date of Birth*</label>
+        <input type="date" id="dob" name="dob" required />
+
+        <label for="homeAddress">Home Address</label>
+        <textarea id="homeAddress" name="homeAddress" rows="2"></textarea>
+
+        <label for="phone">Phone Number*</label>
+        <input type="text" id="phone" name="phone" pattern="^\\d{10}$" placeholder="1234567890" required />
+
+        <label for="dos">Date of Service*</label>
+        <input type="date" id="dos" name="dos" required />
+
+        <label for="dosTime">Time of Service*</label>
+        <input type="time" id="dosTime" name="dosTime" required />
+
+        <label for="providerName">Provider Name*</label>
+        <input type="text" id="providerName" name="providerName" required />
+
+        <label for="providerAddress">Provider Address</label>
+        <textarea id="providerAddress" name="providerAddress" rows="2"></textarea>
+
+        <label for="providerPhone">Provider Phone Number*</label>
+        <input type="text" id="providerPhone" name="providerPhone" pattern="^\\d{10}$" placeholder="1234567890" required />
+
+        <label for="icdCodes">ICD-10 Codes (comma separated)</label>
+        <input type="text" id="icdCodes" name="icdCodes" />
+
+        <label for="cptCodes">CPT Codes (comma separated)</label>
+        <input type="text" id="cptCodes" name="cptCodes" />
+
+        <label for="insuranceType">Insurance Type*</label>
+        <select id="insuranceType" name="insuranceType" required>
+          <option value="">-- Select Insurance --</option>
+          <option value="Private">Private</option>
+          <option value="Medicare">Medicare</option>
+          <option value="Medicaid">Medicaid</option>
+          <option value="Self-pay">Self-pay</option>
+        </select>
+
+        <label for="reason">Reason for Appointment*</label>
+        <textarea id="reason" name="reason" rows="3" required></textarea>
+
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" rows="2"></textarea>
+
+        <div class="buttons">
+          <button type="submit">💾 Save</button>
+          <button type="button" id="cancelEditBtn">↩️ Cancel</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <!-- FullCalendar JS -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.7/index.global.min.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const calendarEl = document.getElementById('calendar');
+      const eventDetails = document.getElementById('eventDetails');
+      const overlay = document.getElementById('overlay');
+
+      const viewModeDiv = document.getElementById('viewMode');
+      const detailsContent = document.getElementById('detailsContent');
+      const editBtn = document.getElementById('editBtn');
+      const deleteBtn = document.getElementById('deleteBtn');
+      const closeDetailsBtn = document.getElementById('closeDetailsBtn');
+
+      const editForm = document.getElementById('editForm');
+      const cancelEditBtn = document.getElementById('cancelEditBtn');
+
+      let currentAppointment = null;
+      let calendar;
+
+      async function fetchAppointments() {
+        try {
+          const res = await fetch('/appointments');
+          const data = await res.json();
+
+          return data.map(appt => ({
+            id: appt.id,
+            title: `${appt.patientName} (${appt.insuranceType})`,
+            start: appt.dos + 'T' + appt.dosTime,
+            extendedProps: appt
+          }));
+        } catch (err) {
+          console.error('Failed to fetch appointments:', err);
+          return [];
+        }
+      }
+
+      function showDetails(appt) {
+        currentAppointment = appt;
+
+        detailsContent.innerHTML = `
+          <strong>👤 Patient Name:</strong> ${appt.patientName}<br/>
+          <strong>🆔 Patient ID:</strong> ${appt.patientId || 'N/A'}<br/>
+          <strong>🎂 DOB:</strong> ${appt.dob}<br/>
+          <strong>🏠 Address:</strong> ${appt.homeAddress}<br/>
+          <strong>📞 Phone:</strong> ${appt.phone}<br/>
+          <strong>📅 Date of Service:</strong> ${appt.dos}<br/>
+          <strong>⏰ Time:</strong> ${appt.dosTime}<br/>
+          <strong>🏥 Provider Name:</strong> ${appt.providerName}<br/>
+          <strong>🏢 Provider Address:</strong> ${appt.providerAddress}<br/>
+          <strong>📱 Provider Phone:</strong> ${appt.providerPhone}<br/>
+          <strong>🩺 ICD-10 Codes:</strong> ${appt.icdCodes}<br/>
+          <strong>🧾 CPT Codes:</strong> ${appt.cptCodes}<br/>
+          <strong>💡 Reason:</strong> ${appt.reason}<br/>
+          <strong>💳 Insurance Type:</strong> ${appt.insuranceType}<br/>
+          <strong>📝 Notes:</strong> ${appt.notes || 'N/A'}<br/>
+        `;
+
+        editForm.style.display = 'none';
+        viewModeDiv.style.display = 'block';
+
+        overlay.style.display = 'block';
+        eventDetails.style.display = 'block';
+      }
+
+      function fillEditForm(appt) {
+        editForm.patientName.value = appt.patientName || '';
+        editForm.patientId.value = appt.patientId || '';
+        editForm.dob.value = appt.dob || '';
+        editForm.homeAddress.value = appt.homeAddress || '';
+        editForm.phone.value = appt.phone || '';
+        editForm.dos.value = appt.dos || '';
+        editForm.dosTime.value = appt.dosTime || '';
+        editForm.providerName.value = appt.providerName || '';
+        editForm.providerAddress.value = appt.providerAddress || '';
+        editForm.providerPhone.value = appt.providerPhone || '';
+        editForm.icdCodes.value = appt.icdCodes || '';
+        editForm.cptCodes.value = appt.cptCodes || '';
+        editForm.reason.value = appt.reason || '';
+        editForm.insuranceType.value = appt.insuranceType || '';
+        editForm.notes.value = appt.notes || '';
+      }
+
+      editBtn.addEventListener('click', () => {
+        fillEditForm(currentAppointment);
+        viewModeDiv.style.display = 'none';
+        editForm.style.display = 'block';
+      });
+
+      deleteBtn.addEventListener('click', async () => {
+        if (!currentAppointment) return;
+
+        if (!confirm(`Are you sure you want to delete the appointment for ${currentAppointment.patientName}? This action cannot be undone.`)) {
+          return;
+        }
+
+        try {
+          const res = await fetch(`/appointments/${currentAppointment.id}`, {
+            method: 'DELETE',
+          });
+          const json = await res.json();
+
+          if (json.success) {
+            alert('🗑️ Appointment deleted successfully!');
+            eventDetails.style.display = 'none';
+            overlay.style.display = 'none';
+            currentAppointment = null;
+            calendar.refetchEvents();
+          } else {
+            alert('Failed to delete appointment.');
+          }
+        } catch (err) {
+          alert('Error deleting appointment: ' + err.message);
+          console.error(err);
+        }
+      });
+
+      closeDetailsBtn.addEventListener('click', () => {
+        eventDetails.style.display = 'none';
+        overlay.style.display = 'none';
+        currentAppointment = null;
+      });
+
+      overlay.addEventListener('click', () => {
+        eventDetails.style.display = 'none';
+        overlay.style.display = 'none';
+        currentAppointment = null;
+      });
+
+      cancelEditBtn.addEventListener('click', () => {
+        editForm.style.display = 'none';
+        viewModeDiv.style.display = 'block';
+      });
+
+      editForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (!currentAppointment) return;
+
+        const updatedAppt = {
+          patientName: editForm.patientName.value.trim(),
+          patientId: editForm.patientId.value.trim(),
+          dob: editForm.dob.value,
+          homeAddress: editForm.homeAddress.value.trim(),
+          phone: editForm.phone.value.trim(),
+          dos: editForm.dos.value,
+          dosTime: editForm.dosTime.value,
+          providerName: editForm.providerName.value.trim(),
+          providerAddress: editForm.providerAddress.value.trim(),
+          providerPhone: editForm.providerPhone.value.trim(),
+          icdCodes: editForm.icdCodes.value.trim(),
+          cptCodes: editForm.cptCodes.value.trim(),
+          reason: editForm.reason.value.trim(),
+          insuranceType: editForm.insuranceType.value,
+          notes: editForm.notes.value.trim(),
+        };
+
+        try {
+          const res = await fetch(`/appointments/${currentAppointment.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedAppt),
+          });
+          const json = await res.json();
+
+          if (json.success) {
+            alert('✅ Appointment updated successfully!');
+            eventDetails.style.display = 'none';
+            overlay.style.display = 'none';
+            currentAppointment = null;
+            calendar.refetchEvents();
+          } else {
+            alert('Failed to update appointment.');
+          }
+        } catch (err) {
+          alert('Error updating appointment: ' + err.message);
+          console.error(err);
+        }
+      });
+
+      (async () => {
+        const events = await fetchAppointments();
+
+        calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          height: 'auto',
+          events,
+          eventColor: '#2980b9',
+          eventTextColor: '#fff',
+          headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+          },
+          eventClick(info) {
+            info.jsEvent.preventDefault();
+            showDetails(info.event.extendedProps);
+          }
+        });
+
+        calendar.render();
+      })();
+    });
+  </script>
+</body>
+</html>

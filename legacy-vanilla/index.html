@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Appointments 📋</title>
+
+  <style>
+    /* Base & Reset */
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f9ff;
+      color: #2c3e50;
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Sidebar */
+    #sidebar {
+      width: 280px;
+      background: #2c3e50;
+      color: #ecf0f1;
+      padding: 20px;
+      box-sizing: border-box;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+    #sidebar h2 {
+      margin-top: 0;
+      font-weight: 700;
+      border-bottom: 2px solid #2980b9;
+      padding-bottom: 10px;
+    }
+    #sidebar blockquote {
+      font-style: italic;
+      border-left: 4px solid #2980b9;
+      margin: 15px 0;
+      padding-left: 15px;
+      color: #aad4f5;
+    }
+    #sidebar ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    #sidebar ul li {
+      margin: 10px 0;
+      line-height: 1.4;
+    }
+    #sidebar ul li a {
+      color: #ecf0f1;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.3s ease;
+    }
+    #sidebar ul li a:hover {
+      color: #3498db;
+      text-decoration: underline;
+    }
+    #sidebar .emergency {
+      background: #c0392b;
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      margin-top: 20px;
+      box-shadow: 0 0 10px rgba(192, 57, 43, 0.5);
+    }
+
+    /* Main content */
+    #mainContent {
+      flex-grow: 1;
+      padding: 30px 40px;
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    /* Calendar Link */
+    #calendarLink {
+      display: inline-block;
+      margin-bottom: 20px;
+      font-weight: 700;
+      color: #2980b9;
+      text-decoration: none;
+      font-size: 1.2rem;
+    }
+    #calendarLink:hover {
+      text-decoration: underline;
+    }
+
+    h1 {
+      color: #2980b9;
+      font-weight: 700;
+      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 2.2rem;
+    }
+
+    /* Appointment form */
+    form#appointmentForm {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(41, 128, 185, 0.3);
+      margin-bottom: 30px;
+      font-size: 0.95rem;
+    }
+    form#appointmentForm label {
+      display: block;
+      margin-top: 12px;
+      font-weight: 600;
+      color: #34495e;
+    }
+    form#appointmentForm input[type="text"],
+    form#appointmentForm input[type="date"],
+    form#appointmentForm input[type="time"],
+    form#appointmentForm select,
+    form#appointmentForm textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1.5px solid #2980b9;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+      box-sizing: border-box;
+    }
+    form#appointmentForm input[type="text"]:focus,
+    form#appointmentForm input[type="date"]:focus,
+    form#appointmentForm input[type="time"]:focus,
+    form#appointmentForm select:focus,
+    form#appointmentForm textarea:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 8px rgba(52, 152, 219, 0.4);
+    }
+    form#appointmentForm textarea {
+      resize: vertical;
+    }
+    form#appointmentForm button {
+      margin-top: 20px;
+      background-color: #27ae60;
+      color: white;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 700;
+      transition: background-color 0.3s ease;
+    }
+    form#appointmentForm button:hover {
+      background-color: #1f8f4a;
+    }
+
+    /* Search & export */
+    #searchExport {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    #searchInput {
+      padding: 10px;
+      font-size: 1rem;
+      width: 250px;
+      border: 1.5px solid #2980b9;
+      border-radius: 6px;
+      transition: border-color 0.3s ease;
+    }
+    #searchInput:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 8px rgba(52, 152, 219, 0.4);
+    }
+    #exportCSVBtn {
+      padding: 10px 18px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #2980b9;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    #exportCSVBtn:hover {
+      background-color: #1f6391;
+    }
+
+    /* Appointments table */
+    #appointmentsTable {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(41, 128, 185, 0.2);
+      font-size: 0.9rem;
+    }
+    #appointmentsTable th, #appointmentsTable td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+      vertical-align: middle;
+    }
+    #appointmentsTable thead {
+      background-color: #2980b9;
+      color: white;
+      font-weight: 700;
+      user-select: none;
+    }
+    #appointmentsTable tbody tr:hover {
+      background-color: #eaf4fc;
+      cursor: pointer;
+    }
+
+    /* Buttons in table */
+    .btn-edit, .btn-delete {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: background-color 0.3s ease;
+      color: white;
+      user-select: none;
+    }
+    .btn-edit {
+      background-color: #2980b9;
+      margin-right: 6px;
+    }
+    .btn-edit:hover {
+      background-color: #1f6391;
+    }
+    .btn-delete {
+      background-color: #e74c3c;
+    }
+    .btn-delete:hover {
+      background-color: #c0392b;
+    }
+    .btn-edit span, .btn-delete span {
+      margin-left: 5px;
+      font-weight: 700;
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 900px) {
+      #mainContent {
+        padding: 20px;
+      }
+      #searchExport {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      #searchInput {
+        width: 100%;
+      }
+      #exportCSVBtn {
+        width: 100%;
+      }
+      form#appointmentForm {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="sidebar" role="complementary" aria-label="Resources and Emergency Contacts">
+    <h2>🌡️ Healthcare Resources</h2>
+    <blockquote>
+      "The good physician treats the disease; the great physician treats the patient who has the disease." — William Osler
+    </blockquote>
+
+    <div class="emergency">
+      🚨 <strong>Emergency Numbers</strong> 🚨
+      <ul>
+        <li>Fire: <a href="tel:911">911</a></li>
+        <li>Poison Control: <a href="tel:18002221222">1-800-222-1222</a></li>
+        <li>Emergency Medical Services: <a href="tel:911">911</a></li>
+        <li>National Suicide Prevention: <a href="tel:988">988</a></li>
+      </ul>
+    </div>
+
+    <h3>Helpful Websites</h3>
+    <ul>
+      <li><a href="https://www.cdc.gov" target="_blank" rel="noopener">CDC</a></li>
+      <li><a href="https://www.nih.gov" target="_blank" rel="noopener">NIH</a></li>
+      <li><a href="https://www.who.int" target="_blank" rel="noopener">WHO</a></li>
+      <li><a href="https://medlineplus.gov" target="_blank" rel="noopener">MedlinePlus</a></li>
+      <li><a href="https://www.healthcare.gov" target="_blank" rel="noopener">Healthcare.gov</a></li>
+    </ul>
+  </div>
+
+  <main id="mainContent">
+    <!-- Calendar Link Added Here -->
+    <a id="calendarLink" href="calendar.html" aria-label="Go to calendar page">📅 Calendar</a>
+
+    <h1>📋 Appointments</h1>
+
+    <form id="appointmentForm" aria-label="Add or edit appointment form">
+      <label for="patientName">Patient Name*</label>
+      <input type="text" id="patientName" name="patientName" required />
+
+      <label for="patientId">Patient ID*</label>
+      <input type="text" id="patientId" name="patientId" required />
+
+      <label for="dob">Date of Birth*</label>
+      <input type="date" id="dob" name="dob" required />
+
+      <label for="homeAddress">Home Address</label>
+      <textarea id="homeAddress" name="homeAddress" rows="2"></textarea>
+
+      <label for="phone">Phone Number*</label>
+      <input type="text" id="phone" name="phone" pattern="^\\d{10}$" placeholder="1234567890" required />
+
+      <label for="dos">Date of Service*</label>
+      <input type="date" id="dos" name="dos" required />
+
+      <label for="dosTime">Time of Service*</label>
+      <input type="time" id="dosTime" name="dosTime" required />
+
+      <label for="providerName">Provider Name*</label>
+      <input type="text" id="providerName" name="providerName" required />
+
+      <label for="providerAddress">Provider Address</label>
+      <textarea id="providerAddress" name="providerAddress" rows="2"></textarea>
+
+      <label for="providerPhone">Provider Phone Number*</label>
+      <input type="text" id="providerPhone" name="providerPhone" pattern="^\\d{10}$" placeholder="1234567890" required />
+
+      <label for="icdCodes">ICD-10 Codes (comma separated)</label>
+      <input type="text" id="icdCodes" name="icdCodes" />
+
+      <label for="cptCodes">CPT Codes (comma separated)</label>
+      <input type="text" id="cptCodes" name="cptCodes" />
+
+      <label for="insuranceType">Insurance Type*</label>
+      <select id="insuranceType" name="insuranceType" required>
+        <option value="">-- Select Insurance --</option>
+        <option value="Private">Private</option>
+        <option value="Medicare">Medicare</option>
+        <option value="Medicaid">Medicaid</option>
+        <option value="Self-pay">Self-pay</option>
+      </select>
+
+      <label for="reason">Reason for Appointment*</label>
+      <textarea id="reason" name="reason" rows="3" required></textarea>
+
+      <label for="notes">Notes</label>
+      <textarea id="notes" name="notes" rows="2"></textarea>
+
+      <button type="submit">💾 Save Appointment</button>
+    </form>
+
+    <div id="searchExport">
+      <input type="text" id="searchInput" placeholder="🔍 Search appointments..." aria-label="Search appointments" />
+      <button id="exportCSVBtn">📥 Export CSV</button>
+    </div>
+
+    <table id="appointmentsTable" aria-label="Appointments list">
+      <thead>
+        <tr>
+          <th>Patient Name</th>
+          <th>Patient ID</th>
+          <th>DOB</th>
+          <th>Phone</th>
+          <th>Date of Service</th>
+          <th>Time</th>
+          <th>Provider</th>
+          <th>Insurance</th>
+          <th>Reason</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Appointment rows inserted here -->
+      </tbody>
+    </table>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
